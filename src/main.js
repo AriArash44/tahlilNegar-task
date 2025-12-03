@@ -15,6 +15,10 @@ document.body.style.margin = "0";
 document.body.appendChild(canvas);
 const ctx = canvas.getContext("2d");
 
+let zoom = 1;
+let offsetX = 0;
+let offsetY = 0;
+
 function render() {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -28,12 +32,15 @@ function render() {
     .size([width, height])
     .padding(2)(root);
   ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(zoom, zoom);
   root.leaves().forEach(d => {
     ctx.fillStyle = d.data.change > 0 ? "green" : d.data.change < 0 ? "red" : "gray";
     ctx.fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
     if ((d.x1 - d.x0) > 40 && (d.y1 - d.y0) > 20) {
       ctx.fillStyle = "white";
-      ctx.font = "12px sans-serif";
+      ctx.font = `12px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
@@ -43,8 +50,57 @@ function render() {
       );
     }
   });
+  ctx.restore();
 }
 
 render();
 
 window.addEventListener("resize", render);
+
+function clampOffsets() {
+  const viewW = canvas.width;
+  const viewH = canvas.height;
+  const contentW = viewW * zoom;
+  const contentH = viewH * zoom;
+  const minX = viewW - contentW;
+  const maxX = 0;
+  const minY = viewH - contentH;
+  const maxY = 0;
+  if (offsetX < minX) offsetX = minX;
+  if (offsetX > maxX) offsetX = maxX;
+  if (offsetY < minY) offsetY = minY;
+  if (offsetY > maxY) offsetY = maxY;
+}
+
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+  const worldX = (mouseX - offsetX) / zoom;
+  const worldY = (mouseY - offsetY) / zoom;
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  zoom *= factor;
+  if (zoom < 1) zoom = 1;
+  offsetX = mouseX - worldX * zoom;
+  offsetY = mouseY - worldY * zoom;
+  clampOffsets();
+  render();
+});
+
+let dragging = false, lastX, lastY;
+canvas.addEventListener("mousedown", e => {
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+canvas.addEventListener("mouseup", () => dragging = false);
+canvas.addEventListener("mousemove", e => {
+  if (dragging) {
+    offsetX += (e.clientX - lastX);
+    offsetY += (e.clientY - lastY);
+    lastX = e.clientX;
+    lastY = e.clientY;
+    clampOffsets();
+    render();
+  }
+});
