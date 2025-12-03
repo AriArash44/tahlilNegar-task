@@ -18,6 +18,7 @@ const ctx = canvas.getContext("2d");
 let zoom = 1;
 let offsetX = 0;
 let offsetY = 0;
+let leaves = [];
 
 function render() {
   const width = window.innerWidth;
@@ -31,6 +32,7 @@ function render() {
     .tile(treemapSquarify)
     .size([width, height])
     .padding(2)(root);
+  leaves = root.leaves();
   ctx.clearRect(0, 0, width, height);
   ctx.save();
   ctx.translate(offsetX, offsetY);
@@ -38,9 +40,9 @@ function render() {
   root.leaves().forEach(d => {
     ctx.fillStyle = d.data.change > 0 ? "green" : d.data.change < 0 ? "red" : "gray";
     ctx.fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
-    if ((d.x1 - d.x0) > 40 && (d.y1 - d.y0) > 20) {
+    if ((d.x1 - d.x0) * zoom > 40 && (d.y1 - d.y0) * zoom > 20) {
       ctx.fillStyle = "white";
-      ctx.font = `12px sans-serif`;
+      ctx.font = `${12 / zoom}px sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
@@ -102,5 +104,19 @@ canvas.addEventListener("mousemove", e => {
     lastY = e.clientY;
     clampOffsets();
     render();
+  }
+});
+
+canvas.addEventListener("click", e => {
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+  const worldX = (mouseX - offsetX) / zoom;
+  const worldY = (mouseY - offsetY) / zoom;
+  for (const d of leaves) {
+    if (worldX >= d.x0 && worldX <= d.x1 &&
+        worldY >= d.y0 && worldY <= d.y1) {
+      alert(d.data.name);
+      break;
+    }
   }
 });
