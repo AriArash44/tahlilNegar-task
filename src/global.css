@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'iran-yekan';
+    src: url('/iranyekanwebregular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+}
+* {
+    font-family: "iran-yekan";
+}

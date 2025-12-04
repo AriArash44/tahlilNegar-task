@@ -42,7 +42,7 @@ function render() {
     ctx.fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
     if ((d.x1 - d.x0) * zoom > 40 && (d.y1 - d.y0) * zoom > 20) {
       ctx.fillStyle = "white";
-      ctx.font = `${12 / zoom}px sans-serif`;
+      ctx.font = `${8 / zoom + 6}px "iran-yekan", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
