@@ -1,12 +1,12 @@
 @font-face {
-    font-family: 'iran-yekan';
-    src: url('/iranyekanwebregular.ttf') format('truetype');
-    font-weight: 400;
+    font-family: 'iran-yekan(fanum)';
+    src: url('/iranyekanweblightfanum.ttf') format('truetype');
+    font-weight: 300;
     font-display: swap;
 }
 
 * {
-    font-family: "iran-yekan";
+    font-family: "iran-yekan(fanum)";
 }
 
 body {

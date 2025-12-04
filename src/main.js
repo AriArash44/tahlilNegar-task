@@ -1,12 +1,19 @@
-import { treemap, hierarchy, treemapSquarify } from "d3";
+import { treemap, hierarchy, treemapSquarify, groups } from "d3";
 import raw from "./MarketMap.json";
+
+const groupNameMap = new Map(raw.groups.map(g => [g.g, g.n]));
+
+const grouped = groups(raw.stocks, d => d.g);
 
 const data = {
   name: "Market",
-  children: raw.stocks.map(d => ({
-    name: d.n,
-    value: Number(d.s),
-    change: Number(d.p)
+  children: grouped.map(([groupId, stocks]) => ({
+    name: groupNameMap.get(groupId),
+    children: stocks.map(d => ({
+      name: d.n,
+      value: Number(d.s),
+      change: Number(d.p)
+    }))
   }))
 };
 
@@ -31,7 +38,7 @@ function render() {
   treemap()
     .tile(treemapSquarify)
     .size([width, height])
-    .padding(2)(root);
+    .padding(1.5)(root);
   leaves = root.leaves();
   ctx.clearRect(0, 0, width, height);
   ctx.save();
@@ -43,7 +50,7 @@ function render() {
     ctx.fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
     if ((d.x1 - d.x0) * zoom > 60 && (d.y1 - d.y0) * zoom > 30) {
       ctx.fillStyle = "white";
-      ctx.font = `${10 / zoom + 4}px "iran-yekan", sans-serif`;
+      ctx.font = `${10 / zoom + 4}px "iran-yekan(fanum)", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const lines = (d.data.name + "\n" + d.data.change).split("\n");
@@ -57,6 +64,19 @@ function render() {
       });
     }
   });
+  root.descendants().forEach(d => {
+  if (d.children && (d.x1 - d.x0) * zoom > 60 && (d.y1 - d.y0) * zoom > 30) {
+    ctx.fillStyle = "white";
+    ctx.font = `${4 / zoom + 2}px "iran-yekan(fanum)", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(
+      d.data.name,
+      d.x0 + (d.x1 - d.x0) / 2,
+      d.y0 - 2 / zoom - 1
+    );
+  }
+});
   ctx.restore();
 }
 
