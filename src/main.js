@@ -115,14 +115,27 @@ canvas.addEventListener("wheel", e => {
 });
 
 let dragging = false, lastX, lastY;
+let movedDuringDrag = false;
 canvas.addEventListener("mousedown", e => {
   dragging = true;
+  movedDuringDrag = false;
   lastX = e.clientX;
   lastY = e.clientY;
 });
-canvas.addEventListener("mouseup", () => dragging = false);
+canvas.addEventListener("mouseup", e => {
+  dragging = false;
+  if (movedDuringDrag) {
+    return;
+  }
+  handleClick(e);
+});
 canvas.addEventListener("mousemove", e => {
   if (dragging) {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      movedDuringDrag = true;
+    }
     offsetX += (e.clientX - lastX);
     offsetY += (e.clientY - lastY);
     lastX = e.clientX;
@@ -131,14 +144,46 @@ canvas.addEventListener("mousemove", e => {
     render();
   }
 });
+canvas.addEventListener("touchstart", e => {
+  if (e.touches.length === 1) {
+    dragging = true;
+    movedDuringDrag = false;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+  }
+});
+canvas.addEventListener("touchmove", e => {
+  if (dragging && e.touches.length === 1) {
+    const dx = e.touches[0].clientX - lastX;
+    const dy = e.touches[0].clientY - lastY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      movedDuringDrag = true;
+    }
+    offsetX += dx;
+    offsetY += dy;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+    clampOffsets();
+    render();
+  }
+});
+canvas.addEventListener("touchend", e => {
+  if (dragging) {
+    dragging = false;
+    if (!movedDuringDrag) {
+      handleClick(e.changedTouches[0]);
+    }
+  }
+});
 
-canvas.addEventListener("click", e => {
-  const mouseX = e.clientX;
-  const mouseY = e.clientY;
+function handleClick(point) {
+  const mouseX = point.clientX;
+  const mouseY = point.clientY;
   const worldX = (mouseX - offsetX) / zoom;
   const worldY = (mouseY - offsetY) / zoom;
   for (const d of leaves) {
-    if (worldX >= d.x0 && worldX <= d.x1 && worldY >= d.y0 && worldY <= d.y1) {
+    if (worldX >= d.x0 && worldX <= d.x1 &&
+        worldY >= d.y0 && worldY <= d.y1) {
       document.getElementById("modal-name").textContent = d.data.name;
       document.getElementById("modal-volume").textContent = d.data.value;
       document.getElementById("modal-change").textContent = d.data.change;
@@ -146,7 +191,7 @@ canvas.addEventListener("click", e => {
       break;
     }
   }
-});
+}
 
 document.getElementById("modal-close").onclick = () => {
   document.getElementById("modal").style.display = "none";
