@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./src/global.css" />
+    <link rel="icon" href="/favicon.png" />
     <title>tahlilnegartask</title>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <div dir="rtl" id="modal" class="modal">
+      <div class="modal-content">
+        <span id="modal-close">&times;</span>
+        <h2 id="modal-name"></h2>
+        <p><strong>حجم بازار:</strong> <span id="modal-volume" dir="ltr"></span></p>
+        <p><strong>تغییرات:</strong> <span id="modal-change"  dir="ltr"></span></p>
+      </div>
+    </div>
   </body>
 </html>

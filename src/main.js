@@ -38,18 +38,23 @@ function render() {
   ctx.translate(offsetX, offsetY);
   ctx.scale(zoom, zoom);
   root.leaves().forEach(d => {
-    ctx.fillStyle = d.data.change > 0 ? "green" : d.data.change < 0 ? "red" : "gray";
+    ctx.fillStyle = d.data.change > 3 ? "#30cc5a" : d.data.change > 1.5 ? "#2f9e4f" : d.data.change > 0.05 ? "#35764e" : 
+    d.data.change < -3 ? "#d2464b" : d.data.change < -1.5 ? "#bf4045" : d.data.change < -0.05 ? "#8b444e" : "#414554";
     ctx.fillRect(d.x0, d.y0, d.x1 - d.x0, d.y1 - d.y0);
-    if ((d.x1 - d.x0) * zoom > 40 && (d.y1 - d.y0) * zoom > 20) {
+    if ((d.x1 - d.x0) * zoom > 60 && (d.y1 - d.y0) * zoom > 30) {
       ctx.fillStyle = "white";
-      ctx.font = `${8 / zoom + 6}px "iran-yekan", sans-serif`;
+      ctx.font = `${10 / zoom + 4}px "iran-yekan", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(
-        d.data.name,
-        d.x0 + (d.x1 - d.x0) / 2,
-        d.y0 + (d.y1 - d.y0) / 2
-      );
+      const lines = (d.data.name + "\n" + d.data.change).split("\n");
+      const lineHeight = 10 / zoom + 6;
+      lines.forEach((line, i) => {
+        ctx.fillText(
+          line,
+          d.x0 + (d.x1 - d.x0) / 2,
+          d.y0 + (d.y1 - d.y0) / 2 + i * lineHeight - lineHeight / 2
+        );
+      });
     }
   });
   ctx.restore();
@@ -113,10 +118,23 @@ canvas.addEventListener("click", e => {
   const worldX = (mouseX - offsetX) / zoom;
   const worldY = (mouseY - offsetY) / zoom;
   for (const d of leaves) {
-    if (worldX >= d.x0 && worldX <= d.x1 &&
-        worldY >= d.y0 && worldY <= d.y1) {
-      alert(d.data.name);
+    if (worldX >= d.x0 && worldX <= d.x1 && worldY >= d.y0 && worldY <= d.y1) {
+      document.getElementById("modal-name").textContent = d.data.name;
+      document.getElementById("modal-volume").textContent = d.data.value;
+      document.getElementById("modal-change").textContent = d.data.change;
+      document.getElementById("modal").style.display = "flex";
       break;
     }
   }
 });
+
+document.getElementById("modal-close").onclick = () => {
+  document.getElementById("modal").style.display = "none";
+};
+
+window.onclick = e => {
+  const modal = document.getElementById("modal");
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+};
