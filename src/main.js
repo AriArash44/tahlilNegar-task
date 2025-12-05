@@ -65,18 +65,18 @@ function render() {
     }
   });
   root.descendants().forEach(d => {
-  if (d.children && (d.x1 - d.x0) * zoom > 60 && (d.y1 - d.y0) * zoom > 30) {
-    ctx.fillStyle = "white";
-    ctx.font = `${4 / zoom + 2}px "iran-yekan(fanum)", sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText(
-      d.data.name,
-      d.x0 + (d.x1 - d.x0) / 2,
-      d.y0 - 2 / zoom - 1
-    );
-  }
-});
+    if (d.children && (d.x1 - d.x0) * zoom > 60 && (d.y1 - d.y0) * zoom > 30) {
+      ctx.fillStyle = "white";
+      ctx.font = `${4 / zoom + 2}px "iran-yekan(fanum)", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(
+        d.data.name,
+        d.x0 + (d.x1 - d.x0) / 2,
+        d.y0 - 2 / zoom - 1
+      );
+    }
+  });
   ctx.restore();
 }
 
@@ -118,6 +118,7 @@ canvas.addEventListener("wheel", e => {
 
 let dragging = false, lastX, lastY;
 let movedDuringDrag = false;
+
 canvas.addEventListener("mousedown", e => {
   dragging = true;
   movedDuringDrag = false;
@@ -144,8 +145,7 @@ canvas.addEventListener("mousemove", e => {
     lastY = e.clientY;
     clampOffsets();
     render();
-  }
-  else {
+  } else {
     const mouseX = e.clientX;
     const mouseY = e.clientY;
     const worldX = (mouseX - offsetX) / zoom;
@@ -161,16 +161,63 @@ canvas.addEventListener("mousemove", e => {
     canvas.style.cursor = hovering ? "pointer" : "default";
   }
 });
+
+let pinchActive = false;
+let pinchStartDist = 0;
+let pinchStartZoom = 1;
+let pinchStartMidX = 0;
+let pinchStartMidY = 0;
+let pinchWorldX = 0;
+let pinchWorldY = 0;
+
+function touchDist(t1, t2) {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
+  return Math.hypot(dx, dy);
+}
+function touchMid(t1, t2) {
+  return {
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2
+  };
+}
+
 canvas.addEventListener("touchstart", e => {
-  if (e.touches.length === 1) {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    pinchActive = true;
+    movedDuringDrag = true;
+    const [t1, t2] = e.touches;
+    pinchStartDist = touchDist(t1, t2);
+    pinchStartZoom = zoom;
+    const mid = touchMid(t1, t2);
+    pinchStartMidX = mid.x;
+    pinchStartMidY = mid.y;
+    pinchWorldX = (pinchStartMidX - offsetX) / zoom;
+    pinchWorldY = (pinchStartMidY - offsetY) / zoom;
+  } else if (e.touches.length === 1 && !pinchActive) {
+    e.preventDefault();
     dragging = true;
     movedDuringDrag = false;
     lastX = e.touches[0].clientX;
     lastY = e.touches[0].clientY;
   }
-});
+}, { passive: false });
+
 canvas.addEventListener("touchmove", e => {
-  if (dragging && e.touches.length === 1) {
+  if (pinchActive && e.touches.length === 2) {
+    e.preventDefault();
+    const [t1, t2] = e.touches;
+    const dist = touchDist(t1, t2);
+    const factor = dist / pinchStartDist;
+    zoom = pinchStartZoom * factor;
+    if (zoom < 1) zoom = 1;
+    offsetX = pinchStartMidX - pinchWorldX * zoom;
+    offsetY = pinchStartMidY - pinchWorldY * zoom;
+    clampOffsets();
+    render();
+  } else if (dragging && e.touches.length === 1 && !pinchActive) {
+    e.preventDefault();
     const dx = e.touches[0].clientX - lastX;
     const dy = e.touches[0].clientY - lastY;
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
@@ -183,15 +230,23 @@ canvas.addEventListener("touchmove", e => {
     clampOffsets();
     render();
   }
-});
+}, { passive: false });
+
 canvas.addEventListener("touchend", e => {
+  if (pinchActive && e.touches.length >= 1) {
+    return;
+  }
+  if (pinchActive && e.touches.length === 0) {
+    pinchActive = false;
+    return;
+  }
   if (dragging) {
     dragging = false;
-    if (!movedDuringDrag) {
+    if (!movedDuringDrag && e.changedTouches.length === 1) {
       handleClick(e.changedTouches[0]);
     }
   }
-});
+}, { passive: false });
 
 function handleClick(point) {
   const mouseX = point.clientX;
