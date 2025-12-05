@@ -30,7 +30,7 @@ A visual overview of the heat map in different viewports:
 
 | Mobile — View                                   | Desktop — View                                   |
 |-------------------------------------------------|--------------------------------------------------|
-| ![Mobile View](./public/mobile-demo.png) | ![Desktop View](./public/desktop-demo.png) |
+| ![Mobile View](./public/mobile-demo.jpg) | ![Desktop View](./public/desktop-demo.png) |
 | *mobile view of the heat map*                   | *Desktop view of the heat map*          |
 
 
