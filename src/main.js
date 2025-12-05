@@ -80,7 +80,9 @@ function render() {
   ctx.restore();
 }
 
-render();
+document.fonts.ready.then(() => {
+  render();
+});
 
 window.addEventListener("resize", render);
 
@@ -142,6 +144,21 @@ canvas.addEventListener("mousemove", e => {
     lastY = e.clientY;
     clampOffsets();
     render();
+  }
+  else {
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+    const worldX = (mouseX - offsetX) / zoom;
+    const worldY = (mouseY - offsetY) / zoom;
+    let hovering = false;
+    for (const d of leaves) {
+      if (worldX >= d.x0 && worldX <= d.x1 &&
+          worldY >= d.y0 && worldY <= d.y1) {
+        hovering = true;
+        break;
+      }
+    }
+    canvas.style.cursor = hovering ? "pointer" : "default";
   }
 });
 canvas.addEventListener("touchstart", e => {
